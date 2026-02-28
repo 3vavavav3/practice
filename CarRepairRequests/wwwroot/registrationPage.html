@@ -2,9 +2,42 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Регистрация</title>
 </head>
 <body>
+    <h1>Регистрация</h1>
+    <label>Телефон:</label>
+    <br>
+    <input type="text" id="phone" placeholder="Введите номер телефона" />
+    <br>
+    <label>ФИО:</label>
+    <br>
+    <input type="text" id="name" placeholder="Введите Ваше ФИО">
+    <br>
+    <label>Логин</label>
+    <br>
+    <input type="text" id="username" placeholder="Введите логин" />
+    <br>
+    <label>Пароль</label>
+    <br>
+    <input type="password" id="password" placeholder="Введите пароль" />
+    <br>
+    <label>Подтвердите пароль</label>
+    <br>
+    <input type="password" id="password_check" placeholder="Введите пароль еще раз" />
+    <br>
+    <br>
+    <label>Роль в системе:</label>
+    <select name="role" id="role">
+        <option value="manager">Менеджер</option>
+        <option value="automechanic">Автомеханик</option>
+        <option value="customer">Заказчик</option>
+    </select>
+    <br>
+    <br>
+    <button onclick="reg()">Зарегистрироваться</button>
+    <br>
 
+    <a href="registrationPage.html">Вернуться на страницу авторизации</a>
 </body>
 </html>

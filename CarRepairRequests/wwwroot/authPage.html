@@ -2,9 +2,33 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Авторизация</title>
 </head>
 <body>
+    <h1>Автосервис "АвтоТранс"</h1>
+    <h2>Вход в систему</h2>
+
+    <label for="username">Логин:</label>
+    <br>
+    <input type="text" id="username" placeholder="Введите логин"/>
+    <br>
+    <label for="password">Пароль:</label>
+    <br>
+    <input type="password" id="password" placeholder="Введите пароль">
+    <br><br>
+
+    <button onclick="login()">Войти</button>
+    <br>
+    <a href="registrationPage.html">Зарегистрироваться</a>
+
+    <script>
+        function login() {
+            let username = document.getElementById("username").value;
+            let password = document.getElementById("password").value;
+
+        }
+    </script>
+
 
 </body>
 </html>
