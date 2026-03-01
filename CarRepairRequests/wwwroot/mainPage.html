@@ -5,7 +5,22 @@
     <title>Главная страница</title>
 </head>
 <body>
-    <h1>Заявки на ремонт автомобилей</h1>
+
+    <h1>Автосервис "Автотранс"</h1>
+    <label>Поиск заявки</label>
+    <br>
+    <input type="text" id="searchInput" placeholder="Введите параметры для поиска">
+    <button onclick="searchResults()">Найти</button>
+    <button onclick="location.href='authPage.html'">Выйти из системы</button>
+    <br>
+    <h2>Меню</h2>
+    <p>
+        <a href="createRequest.html">Добавление заявки</a>
+        <br>
+        <a href="statisticPage.html">Просмотр статистики</a>
+        <br>
+    </p>
+    <h2>Заявки на ремонт автомобилей</h2>
     <table>
         <thead>
             <tr>
@@ -18,9 +33,79 @@
                 <th>Запчасти</th>
                 <th>Мастер</th>
                 <th>Клиент</th>
+                <th></th>
             </tr>
         </thead>
+        <tbody id="requestsTable">
+        </tbody>
     </table>
+
+    <script>
+        async function loadRequests() {
+            let response = await fetch('/api/requests')
+            let requests = await response.json();
+
+            let tbode = document.getElementById('requestsTable');
+            let html = '';
+
+            for (let i = 0; i < requests.length; i++) {
+                let r = requests[i];
+
+                html = html + '<td>' +
+                    '<td>' + r.createDate + '</td>' +
+                    '<td>' + r.cType + '</td>' +
+                    '<td>' + r.carModel + '</td>' +
+                    '<td>' + r.problem + '</td>' +
+                    '<td>' + r.status + '</td>' +
+                    '<td>' + (r.completionDate || '') + '</td>' +
+                    '<td>' + (r.parts || '') + '</td>' +
+                    '<td>' + (r.master || '') + '</td>' +
+                    '<td>' + r.client + '</td>' +
+                    '<td>' +
+                    '<button onclick="editRequest(' + r.id + ')">Редактировать</button>' +
+                    '</td>' +
+                    '</tr>';
+
+            }
+
+            tbody.innerHTML = html;
+        }
+
+        function editRequest(id) {
+            window.location.href = 'editRequest.html?id' + id;
+        }
+
+        function searchResults() {
+            let searchText = document.getElementById('searchInput').value;
+
+            let response = await fetch('/api/reaquests/search?text=' + encodeURIComponent(searchText));
+            let results = await response.json();
+
+            let tbody = document.getElementById('rearchResultsTable');
+
+            if (results.length == 0) {
+                tbody.innerHTML = '<tr<td colspan="5">Ничего не найдено</td></tr>';
+                return;
+
+            }
+
+            let html = '';
+            for (let i = 0; i < results.length; i++) {
+                let r = results[i];
+                html = html + '<tr>' + 
+                    '<td>' + r.requestNumber + '</td>' +
+                    '<td>' + r.model + '</td>' +
+                    '<td>' + r.status + '</td>' +
+                    '<td>' +
+                    '<button onclick="viewRequest(' + r.id + ')">Перейти к заявке</button>' +
+                    '</td>' +
+                    '</tr>';
+            }
+
+            tbody.innerHTML = html;
+        }
+        
+    </script>
 
 </body>
 </html>

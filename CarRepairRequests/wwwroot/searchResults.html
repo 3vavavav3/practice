@@ -2,9 +2,54 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Результаты поиска</title>
 </head>
 <body>
+    <h1>Результаты поиска</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Номер</th>
+                <th>Модель</th>
+                <th>Статус</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="results"></tbody>
+    </table>
+    <br>
+    <button onclick="location.href='mainPage.html'">Вернуться на главную страницу</button>
+    <script>
+        let searchText = new URLSearchParams(window.location.href).get('text');
+
+        async function loadResults() {
+            let response = await fetch('/api/requests/search?text=' + searchText);
+            let results = await response.json();
+
+            let tbody = document.getElementById('results');
+            let html = '';
+
+            for (let i = 0; i < results.length; i++) {
+                let r = results[i];
+                html += '<tr>' +
+                    '<td>' + r.requestID + '</td>' +
+                    '<td>' + r.carModel + '</td>' +
+                    '<td>' + r.requestStatus + '</td>' +
+                    '<td><button onclick="location.href=\'detailedRequest.html?id=' + r.requestID + '\'">Открыть</button></td>' +
+                    '</tr>';
+            }
+
+            if (html == '') {
+                tbody.innerHTML = '<tr><td colspan="4">Ничего не найдено</td></tr>';
+            } else {
+                tbody.innerHTML = html;
+            }
+        }
+
+        loadResults();
+
+    </script>
 
 </body>
 </html>

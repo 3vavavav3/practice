@@ -26,7 +26,26 @@
             let username = document.getElementById("username").value;
             let password = document.getElementById("password").value;
 
+            let response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+            if (response.ok) {
+                let userData = await response.json();
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+
+                alert("Доброе пожаловать, " + userData.name);
+                window.location.href = "mainPage.html";
+            }
         }
+
+
+
     </script>
 
 

@@ -2,9 +2,43 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Редактирование заявки</title>
 </head>
 <body>
+    <h1>Редактирование заявки</h1>
+    <h2>Заявка ///</h2>
+    <label>Статус</label>
+    <br>
+    <select name="status" id="status">
+        <option value="process">В процессе</option>
+        <option value="ready">Готова к выдаче</option>
+        <option value="new">Новая заявка</option>
+    </select>
+    <br>
+    <label>Запчасти</label>
+    <br>
+    <input type="text" id="createDate" placeholder="Укажите запчасти">
+    <br>
+    <label>Мастер</label>
+    <br>
+    <select name="master" id="master">
+    </select>
+    <script>
+        async function loadMasters() {
+            let response = await fetch('/api/users?role=mechanic');
+            let masters = await response.json();
 
+            let select = document.getElementById('master');
+            let html = '<option value="">Выберите мастера</option>';
+
+            for (let i; i < masters.length; i++) {
+                options = options +
+                    '<option value"' + masters[i].id + '">' +
+                    masters[i].name +
+                    '</option>';
+            }
+
+            select.innerHTML = options;
+    </script>
 </body>
 </html>

@@ -2,9 +2,38 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Статистика</title>
 </head>
 <body>
+    <h1>Статистика работы отдела обслуживания</h1>
+   
+    <div id="stats">
+        <p>... Загрузка ...</p>
+    </div>
+   <br>
+    <a href="mainPage.html">Вернуться на главную страницу</a>
+    <script>
+        async function loadStatidtics() {
+            let response = await fetch('/api/statistics');
+            let data = await response.json();
+
+            let html =
+                '<p><strong>Количество выполненных заявок:</strong> ' + data.completedCount + '</p>' +
+                '<p><strong>Среднее время выполнения заявки:</strong> ' + data.avgTime + ' часов</p>' +
+                '<p><strong>Статистика по типам неисправностей:</strong></p>' +
+                '<ul>';
+
+            for (let type in data.byProblem) {
+                html += '<li>' + type + ': ' + data.byProblem[type] + '</li>';
+            }
+
+            html += '</ul>';
+
+            document.getElementById('stats').innerHTML = html;
+        }
+        loadStatidtics();
+    </script>
 
 </body>
+
 </html>

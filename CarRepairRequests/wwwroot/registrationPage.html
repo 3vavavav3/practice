@@ -14,15 +14,15 @@
     <br>
     <input type="text" id="name" placeholder="Введите Ваше ФИО">
     <br>
-    <label>Логин</label>
+    <label>Логин:</label>
     <br>
     <input type="text" id="username" placeholder="Введите логин" />
     <br>
-    <label>Пароль</label>
+    <label>Пароль:</label>
     <br>
     <input type="password" id="password" placeholder="Введите пароль" />
     <br>
-    <label>Подтвердите пароль</label>
+    <label>Подтверждение пароля:</label>
     <br>
     <input type="password" id="password_check" placeholder="Введите пароль еще раз" />
     <br>
@@ -37,7 +37,55 @@
     <br>
     <button onclick="reg()">Зарегистрироваться</button>
     <br>
-
     <a href="registrationPage.html">Вернуться на страницу авторизации</a>
+    <script>
+        function reg() {
+            let phone = document.getElementById("phone").value;
+            let name = document.getElementById("name").value;
+            let username = document.getElementById("username").value;
+            let password = document.getElementById("password").value;
+            let passwordCheck = document.getElementById("password_check").value;
+            let role = document.getElementById("role").value;
+
+            if (phone == "" || name == "" || username == "" || password == "" || password_check == "" || role == "") {
+                alert("Заполните все поля.");
+                return;
+            }
+
+            if (password != passwordСheck) {
+                alert("Пароли не совпадают.");
+                return;
+            }
+
+            if (password.length < 5) {
+                alert("Пароль слишком короткий.");
+                return;
+            }
+
+            let userData = {
+                phone: phone,
+                name: name,
+                username: username,
+                password: password,
+                role: role
+            };
+
+            fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            })
+
+            .then(response => {
+            if (response.ok) {
+                alert("Регистрация прошла успешно.");
+                window.location.href = "authPage.html";
+            } else {
+                alert("Ошибка при регистрации.");
+            }
+            })
+        }
+
+    </script>
 </body>
 </html>

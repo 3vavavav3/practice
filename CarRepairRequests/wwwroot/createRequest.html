@@ -2,9 +2,98 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Создание заявки</title>
 </head>
 <body>
+    <label>Дата создания</label>
+    <br>
+    <input type="text" id="createDate" placeholder="Введите дату создания">
+    <br>
+    <label>Тип авто</label>
+    <br>
+    <select name="autoType" id="autoType">
+        <option value="legk">Легковая</option>
+        <option value="gruz">Грузовая</option>
+    </select>
+    <br>
+    <label>Модель авто</label>
+    <br>
+    <input type="text" id="model" placeholder="Введите модель авто">
+    <br>
+    <label>Проблема</label>
+    <br>
+    <input type="text" id="problem" placeholder="Укажите проблему">
+    <br>
+    <label>Статус</label>
+    <br>
+    <select name="status" id="status">
+        <option value="process">В процессе</option>
+        <option value="ready">Готова к выдаче</option>
+        <option value="new">Новая заявка</option>
+    </select>
+    <br>
+    <label>Дата завершения</label>
+    <br>
+    <input type="text" id="completionDate" placeholder="Введите дату завершения">
+    <br>
+    <label>Запчасти</label>
+    <br>
+    <input type="text" id="parts" placeholder="Укажите запчасти">
+    <br>
+    <label>Мастер</label>
+    <br>
+    <select name="master" id="master">
+    </select>
+    <br>
+    <button onclick="saveRequest()">Сохранить заявку</button>
+    <br>
+    <a href="mainPage.html">Вернуться на главную страницу</a>
 
+    <script>
+        async function loadMasters() {
+            let response = await fetch('/api/users?role=mechanic');
+            let masters = await response.json();
+
+            let select = document.getElementById('master');
+            let html = '<option value="">Выберите мастера</option>';
+
+            for (let i; i < masters.length; i++) {
+                options = options +
+                    '<option value"' + masters[i].id + '">' +
+                    masters[i].name +
+                    '</option>';
+            }
+
+            select.innerHTML = options;
+        }
+
+        async function saveRequest() {
+            let requestData = {
+                createDate: document.getElementById('createDate').value,
+                autoType: document.getElementById('autoType').value,
+                model: document.getElementById('model').value,
+                problem: document.getElementById('problem').value,
+                status: document.getElementById('status').value,
+                completionDate: document.getElementById('completionDate').value,
+                parts: document.getElementById('parts').value,
+                masterId: document.getElementById('master').value,
+                client: document.getElementById('client').value,
+                phone: document.getElementById('phone').value
+            };
+
+            let response = await fetch('/api/requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
+            if (response.ok) {
+                alert('Заявка сохранена');
+                window.location.href = 'mainPage.html';
+            } else {
+                alert('Ошибка');
+            }
+        }
+    </script>
 </body>
 </html>
