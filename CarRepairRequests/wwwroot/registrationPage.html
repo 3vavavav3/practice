@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Регистрация</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <h1>Регистрация</h1>
@@ -38,6 +39,8 @@
     <button onclick="reg()">Зарегистрироваться</button>
     <br>
     <a href="registrationPage.html">Вернуться на страницу авторизации</a>
+
+    <script src="js/messages.js"></script>
     <script>
         function reg() {
             let phone = document.getElementById("phone").value;
@@ -47,27 +50,26 @@
             let passwordCheck = document.getElementById("password_check").value;
             let role = document.getElementById("role").value;
 
-            if (phone == "" || name == "" || username == "" || password == "" || password_check == "" || role == "") {
-                alert("Заполните все поля.");
+            if (!phone || !name || !username || !password || !passwordCheck || !role) {
+                showMessage("Заполните все поля", "warning");
                 return;
             }
 
-            if (password != passwordСheck) {
-                alert("Пароли не совпадают.");
+            if (password != passwordCheck) {
+                showMessage("Пароли не совпадают", "error");
                 return;
             }
 
             if (password.length < 5) {
-                alert("Пароль слишком короткий.");
-                return;
+                showMessage("Пароль должен быть не меньше 5 символов", "warning");
             }
 
             let userData = {
                 phone: phone,
-                name: name,
-                username: username,
+                fio: name,
+                login: username,
                 password: password,
-                role: role
+                type: role
             };
 
             fetch('/api/users', {
@@ -76,14 +78,17 @@
                 body: JSON.stringify(userData)
             })
 
-            .then(response => {
-            if (response.ok) {
-                alert("Регистрация прошла успешно.");
-                window.location.href = "authPage.html";
-            } else {
-                alert("Ошибка при регистрации.");
-            }
-            })
+                .then(response => {
+                    if (response.ok) {
+                        showMessage("Регистрация прошла успешно", "success");
+                        window.location.href = "authPage.html";
+                    } else {
+                        showMessage("Ошибка при регистрации", "error");
+                    }
+                })
+                .catch(error => {
+                    showMessage("Ошибка соединения с сервером", "error");
+                });
         }
 
     </script>

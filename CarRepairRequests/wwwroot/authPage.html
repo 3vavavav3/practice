@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Авторизация</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <h1>Автосервис "АвтоТранс"</h1>
@@ -10,7 +11,7 @@
 
     <label for="username">Логин:</label>
     <br>
-    <input type="text" id="username" placeholder="Введите логин"/>
+    <input type="text" id="username" placeholder="Введите логин" />
     <br>
     <label for="password">Пароль:</label>
     <br>
@@ -21,31 +22,36 @@
     <br>
     <a href="registrationPage.html">Зарегистрироваться</a>
 
+    <script src="js/messages.js"></script>
     <script>
-        function login() {
+        async function login() {
             let username = document.getElementById("username").value;
             let password = document.getElementById("password").value;
 
+            if (!username || !password) {
+                showMessage('Введите логин и пароль', 'warning');
+                return;
+            }
             let response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username: username,
+                    login: username,
                     password: password
                 })
             });
 
+
             if (response.ok) {
                 let userData = await response.json();
                 localStorage.setItem('currentUser', JSON.stringify(userData));
-
-                alert("Доброе пожаловать, " + userData.name);
+                showMessage("Добро пожаловать, " + userData.fio, "success");  // БЫЛО: userData.name
                 window.location.href = "mainPage.html";
+            } else {
+                showMessage("Неверный логин или пароль", "error");
             }
         }
-
-
-
+ 
     </script>
 
 

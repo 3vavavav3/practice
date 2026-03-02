@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Результаты поиска</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <h1>Результаты поиска</h1>
@@ -20,6 +21,8 @@
     </table>
     <br>
     <button onclick="location.href='mainPage.html'">Вернуться на главную страницу</button>
+
+    <script src="js/messages.js"></script>
     <script>
         let searchText = new URLSearchParams(window.location.href).get('text');
 
@@ -40,10 +43,12 @@
                     '</tr>';
             }
 
-            if (html == '') {
+            if (results.length == 0) {
+                showMessage("По запросу \"" + searchText + "\" ничего не найдено", "info");
                 tbody.innerHTML = '<tr><td colspan="4">Ничего не найдено</td></tr>';
             } else {
                 tbody.innerHTML = html;
+                showMessage("Найдено заявок: " + results.length, "success");
             }
         }
 

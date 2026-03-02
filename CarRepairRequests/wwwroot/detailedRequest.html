@@ -2,9 +2,47 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Детали заявки</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <h1>Детали заявки</h1>
 
+    <div id="details">Загрузка...</div>
+
+    <br>
+    <button onclick="history.back()">Назад</button>
+
+    <script src="js/helpers.js"></script>
+    <script>
+        async function loadRequest() {
+            let id = new URLSearchParams(window.location.search).get('id');
+
+            try {
+                let res = await fetch('/api/requests/' + id);
+                let r = await res.json();
+
+                let usersRes = await fetch('/api/users');
+                let users = await usersRes.json();
+
+                let client = users.find(u => u.id === r.clientId);
+                let master = users.find(u => u.id === r.masterId);
+
+                document.getElementById('details').innerHTML =
+                    '<p><strong>Дата:</strong> ' + (r.startDate ? new Date(r.startDate).toLocaleDateString() : '') + '</p>' +
+                    '<p><strong>Модель:</strong> ' + (r.carModel || '') + '</p>' +
+                    '<p><strong>Проблема:</strong> ' + (r.problemDescryption || '') + '</p>' +
+                    '<p><strong>Статус:</strong> ' + (r.requestStatus || '') + '</p>' +
+                    '<p><strong>Клиент:</strong> ' + (client ? client.fio : '') + '</p>' +
+                    '<p><strong>Телефон:</strong> ' + (client ? client.phone : '') + '</p>' +
+                    '<p><strong>Мастер:</strong> ' + (master ? master.fio : 'Не назначен') + '</p>';
+            } catch {
+                showMessage('Ошибка загрузки', 'error');
+                document.getElementById('details').innerHTML = 'Ошибка';
+            }
+        }
+
+        loadRequest();
+    </script>
 </body>
 </html>

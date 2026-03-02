@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Создание заявки</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <label>Дата создания</label>
@@ -49,18 +50,21 @@
     <br>
     <a href="mainPage.html">Вернуться на главную страницу</a>
 
+    <script src="js/messages.js"></script>
     <script>
         async function loadMasters() {
-            let response = await fetch('/api/users?role=mechanic');
-            let masters = await response.json();
+            let response = await fetch('/api/users');
+            let users = await response.json();
+            let masters = users.filter(u => u.type === "mechanic");
+            
 
             let select = document.getElementById('master');
             let html = '<option value="">Выберите мастера</option>';
 
-            for (let i; i < masters.length; i++) {
+            for (let i = 0; i < masters.length; i++) {
                 options = options +
                     '<option value"' + masters[i].id + '">' +
-                    masters[i].name +
+                    masters[i].fio +
                     '</option>';
             }
 
@@ -68,19 +72,21 @@
         }
 
         async function saveRequest() {
+            let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
             let requestData = {
-                createDate: document.getElementById('createDate').value,
-                autoType: document.getElementById('autoType').value,
-                model: document.getElementById('model').value,
-                problem: document.getElementById('problem').value,
-                status: document.getElementById('status').value,
-                completionDate: document.getElementById('completionDate').value,
-                parts: document.getElementById('parts').value,
-                masterId: document.getElementById('master').value,
-                client: document.getElementById('client').value,
-                phone: document.getElementById('phone').value
+                startDate: new Date(),  
+                carType: document.getElementById('autoType').value,
+                carModel: document.getElementById('model').value,
+                problemDescryption: document.getElementById('problem').value,
+                requestStatus: document.getElementById('status').value,
+                completionDate: document.getElementById('completionDate').value || null,
+                repairParts: document.getElementById('parts').value,
+                masterId: document.getElementById('master').value || null,
+                clientId: currentUser ? currentUser.id : null  
             };
 
+            
             let response = await fetch('/api/requests', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -88,12 +94,14 @@
             });
 
             if (response.ok) {
-                alert('Заявка сохранена');
+                showMessage('Заявка создана', 'success');
                 window.location.href = 'mainPage.html';
             } else {
-                alert('Ошибка');
+                showMessage('Ошибка при создании заявки', 'error');
             }
         }
+        loadMasters();
+
     </script>
 </body>
 </html>

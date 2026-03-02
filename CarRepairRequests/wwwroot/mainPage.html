@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Главная страница</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -40,29 +41,34 @@
         </tbody>
     </table>
 
+    <script src="js/messages.js"></script>
     <script>
         async function loadRequests() {
             let response = await fetch('/api/requests')
             let requests = await response.json();
 
-            let tbode = document.getElementById('requestsTable');
+            let tbody = document.getElementById('requestsTable');
             let html = '';
 
             for (let i = 0; i < requests.length; i++) {
                 let r = requests[i];
 
-                html = html + '<td>' +
+                let masterName = r.master ? r.master.fio : '';
+                let clientName = r.client ? r.client.fio : '';
+
+                html = html + '<tr>' +
                     '<td>' + r.createDate + '</td>' +
-                    '<td>' + r.cType + '</td>' +
+                    '<td>' + r.carType + '</td>' +
                     '<td>' + r.carModel + '</td>' +
-                    '<td>' + r.problem + '</td>' +
-                    '<td>' + r.status + '</td>' +
+                    '<td>' + r.problemDescryption + '</td>' +
+                    '<td>' + r.requestStatus + '</td>' +
                     '<td>' + (r.completionDate || '') + '</td>' +
-                    '<td>' + (r.parts || '') + '</td>' +
-                    '<td>' + (r.master || '') + '</td>' +
-                    '<td>' + r.client + '</td>' +
+                    '<td>' + (r.repairParts || '') + '</td>' +
+                    '<td>' + (r.master ? r.master.fio : '') + '</td>' +  
+                    '<td>' + (r.client ? r.client.fio : '') + '</td>' +  
                     '<td>' +
                     '<button onclick="editRequest(' + r.id + ')">Редактировать</button>' +
+                    '<button onclick="deleteRequest(' + r.id + ')">Удалить</button>' +
                     '</td>' +
                     '</tr>';
 
@@ -71,17 +77,45 @@
             tbody.innerHTML = html;
         }
 
+        
+
+        async function deleteRequest(id) {
+            if (!confirmAction("Вы уверены, что хотите удалить заявку?")) {
+                return;
+            }
+
+            try {
+                let response = await fetch('/api/requests/' + id, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showMessage("Заявка удалена", "success");
+                    loadRequests(); 
+                } else {
+                    showMessage("Ошибка при удалении", "error");
+                }
+            } catch (error) {
+                showMessage("Ошибка соединения с сервером", "error");
+            }
+        }
+
         function editRequest(id) {
             window.location.href = 'editRequest.html?id' + id;
         }
 
-        function searchResults() {
+        async function searchResults() {
             let searchText = document.getElementById('searchInput').value;
 
-            let response = await fetch('/api/reaquests/search?text=' + encodeURIComponent(searchText));
+            if (!searchText) {
+                showMessage("Введите текст для поиска", "warning");
+                return;
+            }
+
+            let response = await fetch('/api/requests/search?text=' + encodeURIComponent(searchText));
             let results = await response.json();
 
-            let tbody = document.getElementById('rearchResultsTable');
+            let tbody = document.getElementById('requestsTable');
 
             if (results.length == 0) {
                 tbody.innerHTML = '<tr<td colspan="5">Ничего не найдено</td></tr>';
@@ -92,7 +126,7 @@
             let html = '';
             for (let i = 0; i < results.length; i++) {
                 let r = results[i];
-                html = html + '<tr>' + 
+                html = html + '<tr>' +
                     '<td>' + r.requestNumber + '</td>' +
                     '<td>' + r.model + '</td>' +
                     '<td>' + r.status + '</td>' +
@@ -104,7 +138,9 @@
 
             tbody.innerHTML = html;
         }
-        
+
+        loadRequests();
+
     </script>
 
 </body>

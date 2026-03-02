@@ -1,0 +1,60 @@
+﻿.message {
+    padding: 12px 20px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-family: Arial;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.message.info {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.message.info::before {
+    content: "ℹ️ ";
+    font-size: 20px;
+ }
+
+.message.success {
+    background-color: #e8f5e8;
+    border-left: 4px solid #4caf50;
+}
+
+.message.success::before {
+    content: "✅ ";
+    font-size: 20px;
+}
+
+.message.warning {
+    background-color: #fff3e0;
+    border-left: 4px solid #ff9800;
+}
+
+.message.warning::before {
+    content: "⚠️ ";
+    font-size: 20px;
+}
+
+.message.error {
+    background-color: #ffebee;
+    border-left: 4px solid #f44336;
+}
+
+.message.error::before {
+    content: "❌ ";
+    font-size: 20px;
+}
+
+
+input:invalid {
+    border: 2px solid #ff6b6b;
+}
+
+.hint {
+    color: #666;
+    font-size: 0.85em;
+    margin-top: 3px;
+}

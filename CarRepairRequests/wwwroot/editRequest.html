@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Редактирование заявки</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <h1>Редактирование заявки</h1>
@@ -23,6 +24,8 @@
     <br>
     <select name="master" id="master">
     </select>
+
+    <script src="js/messages.js"></script>
     <script>
         async function loadMasters() {
             let response = await fetch('/api/users?role=mechanic');

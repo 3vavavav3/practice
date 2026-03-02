@@ -3,15 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <title>Статистика</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <h1>Статистика работы отдела обслуживания</h1>
-   
+
     <div id="stats">
         <p>... Загрузка ...</p>
     </div>
-   <br>
+    <br>
     <a href="mainPage.html">Вернуться на главную страницу</a>
+    <script src="js/messages.js"></script>
     <script>
         async function loadStatidtics() {
             let response = await fetch('/api/statistics');
@@ -30,7 +33,9 @@
             html += '</ul>';
 
             document.getElementById('stats').innerHTML = html;
-        }
+        } 
+
+
         loadStatidtics();
     </script>
 
