@@ -15,29 +15,55 @@ namespace CarRepairRequests.Controllers
             _db = db;
         }
 
+        private bool IsOperatorOrManager(string userType)
+        {
+            return userType == "Оператор" || userType == "Менеджер";
+        }
+
         [HttpGet("users")]
-        public async Task<IActionResult> GetUsers() => Ok(await _db.Users.ToListAsync());
+        public async Task<IActionResult> GetUsers()
+        {
+            return Ok(await _db.Users.ToListAsync());
+        }
 
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
             var user = await _db.Users.FindAsync(id);
-            return user  == null ? NotFound() : Ok(user);
+            return user == null ? NotFound() : Ok(user);
         }
 
         [HttpPost("users")]
-        public async Task<IActionResult> CreateUser(User user)
+        public async Task<IActionResult> CreateUser([FromBody] User user)
         {
+            user.Id = 0;
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
             return Ok();
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string login,string password)
+        public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Login == login && u.Password == password);
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Login == model.Login && u.Password == model.Password);
             return user == null ? Unauthorized() : Ok(user);
+        }
+
+        [HttpGet("requests")]
+        public async Task<IActionResult> GetRequests(string userType, int? userId)
+        {
+            IQueryable<Request> query = _db.Requests;
+
+            if (userType == "Заказчик" && userId.HasValue)
+            {
+                query = query.Where(r => r.ClientId == userId);
+            }
+            else if (userType == "Автомеханик" && userId.HasValue)
+            {
+                query = query.Where(r => r.MasterId == userId || r.RequestStatus == "Новая заявка");
+            }
+
+            return Ok(await query.ToListAsync());
         }
 
         [HttpGet("requests/{id}")]
@@ -51,34 +77,59 @@ namespace CarRepairRequests.Controllers
         public async Task<IActionResult> SearchRequests(string text)
         {
             var results = await _db.Requests
-                .Where(r => r.CarModel.Contains(text) || r.ProblemDescryption.Contains(text))
+                .Where(r => r.CarModel.Contains(text) || r.ProblemDescription.Contains(text))
                 .ToListAsync();
             return Ok(results);
-
         }
 
         [HttpPost("requests")]
-        public async Task<IActionResult> CreateRequest(Request request)
+        public async Task<IActionResult> CreateRequest([FromBody] Request request)
         {
-            _db.Requests.Add(request);
+            request.Id = 0;
+            if (request.StartDate == DateTime.MinValue)
+                request.StartDate = DateTime.Now;
+
+            await _db.Requests.AddAsync(request);
             await _db.SaveChangesAsync();
             return Ok(request);
         }
 
         [HttpPut("requests/{id}")]
-        public async Task<IActionResult> UpdateRequest(int id, Request request)
+        public async Task<IActionResult> UpdateRequest(int id, [FromBody] RequestUpdateModel model, string userType)
         {
-            if (id != request.Id) return BadRequest();
-            _db.Entry (request).State = EntityState.Modified;
+            var existingRequest = await _db.Requests.FindAsync(id);
+            if (existingRequest == null) return NotFound();
+
+            if (userType == "Автомеханик")
+            {
+                existingRequest.RequestStatus = model.RequestStatus;
+                existingRequest.RepairParts = model.RepairParts;
+            }
+            else
+            {
+                existingRequest.RequestStatus = model.RequestStatus;
+                existingRequest.RepairParts = model.RepairParts;
+                existingRequest.MasterId = model.MasterId;
+            }
+
+            if (model.RequestStatus == "Завершена" && existingRequest.RequestStatus != "Завершена")
+            {
+                existingRequest.CompletionDate = DateTime.UtcNow;
+            }
+
             await _db.SaveChangesAsync();
-            return Ok();
+            return Ok(existingRequest);
         }
 
         [HttpDelete("requests/{id}")]
-        public async Task<IActionResult> DeleteRequest(int id)
+        public async Task<IActionResult> DeleteRequest(int id, string userType)
         {
+            if (userType != "Оператор" && userType != "Менеджер")
+                return Unauthorized();
+
             var request = await _db.Requests.FindAsync(id);
             if (request == null) return NotFound();
+
             _db.Requests.Remove(request);
             await _db.SaveChangesAsync();
             return Ok();
@@ -93,32 +144,45 @@ namespace CarRepairRequests.Controllers
         }
 
         [HttpPost("comments")]
-        public async Task<IActionResult> CreateComment(Comment comment)
+        public async Task<IActionResult> CreateComment(Comment comment, int? masterId)
         {
+            if (!masterId.HasValue) return Unauthorized();
+
+            comment.MasterId = masterId;
             _db.Comments.Add(comment);
             await _db.SaveChangesAsync();
             return Ok(comment);
         }
 
         [HttpGet("statistics")]
-        public async Task<IActionResult> GetStatistics()
+        public async Task<IActionResult> GetStatistics(string userType)
         {
-            int completed = await _db.Requests.CountAsync(r => r.RequestStatus == "Завершена");
+            if (userType != "Оператор" && userType != "Менеджер")
+                return Unauthorized();
 
-            var completedReqs = await _db.Requests
-                .Where(r => r.CompletionDate != null)
-                .ToListAsync();
+            var requests = await _db.Requests.ToListAsync();
 
-            double avgTime = completedReqs.Any()
-                ? Math.Round(completedReqs.Average(r => (r.CompletionDate.Value - r.StartDate).TotalHours), 1)
-                : 0;
-
-            var byProblem = await _db.Requests
-                .GroupBy(r => r.ProblemDescryption)
-                .Select(g => new { Problem = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.Problem, v => v.Count);
-
-            return Ok(new { completedCount = completed, avgTime, byProblem });
+            return Ok(new
+            {
+                completedCount = requests.Count(r => r.RequestStatus == "Завершена"),
+                byProblem = requests
+                    .Where(r => !string.IsNullOrEmpty(r.ProblemDescription))
+                    .GroupBy(r => r.ProblemDescription)
+                    .ToDictionary(g => g.Key, g => g.Count())
+            });
         }
+    }
+
+    public class LoginModel
+    {
+        public string Login { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class RequestUpdateModel
+    {
+        public string RequestStatus { get; set; }
+        public string RepairParts { get; set; }
+        public int? MasterId { get; set; }
     }
 }

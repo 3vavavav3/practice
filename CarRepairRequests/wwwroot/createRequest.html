@@ -6,46 +6,48 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <label>Дата создания</label>
-    <br>
-    <input type="text" id="createDate" placeholder="Введите дату создания">
-    <br>
     <label>Тип авто</label>
     <br>
-    <select name="autoType" id="autoType">
-        <option value="legk">Легковая</option>
-        <option value="gruz">Грузовая</option>
+    <select id="autoType">
+        <option value="Легковая">Легковая</option>
+        <option value="Грузовая">Грузовая</option>
     </select>
     <br>
+
     <label>Модель авто</label>
     <br>
     <input type="text" id="model" placeholder="Введите модель авто">
     <br>
+
     <label>Проблема</label>
     <br>
     <input type="text" id="problem" placeholder="Укажите проблему">
     <br>
+
     <label>Статус</label>
     <br>
-    <select name="status" id="status">
-        <option value="process">В процессе</option>
-        <option value="ready">Готова к выдаче</option>
-        <option value="new">Новая заявка</option>
+    <select id="status">
+        <option value="Новая заявка">Новая заявка</option>
+        <option value="В процессе">В процессе</option>
+        <option value="Завершена">Завершена</option>
     </select>
     <br>
+
     <label>Дата завершения</label>
     <br>
-    <input type="text" id="completionDate" placeholder="Введите дату завершения">
+    <input type="date" id="completionDate">
     <br>
+
     <label>Запчасти</label>
     <br>
     <input type="text" id="parts" placeholder="Укажите запчасти">
     <br>
+
     <label>Мастер</label>
     <br>
-    <select name="master" id="master">
-    </select>
+    <select id="master"></select>
     <br>
+
     <button onclick="saveRequest()">Сохранить заявку</button>
     <br>
     <a href="mainPage.html">Вернуться на главную страницу</a>
@@ -55,17 +57,13 @@
         async function loadMasters() {
             let response = await fetch('/api/users');
             let users = await response.json();
-            let masters = users.filter(u => u.type === "mechanic");
-            
+            let masters = users.filter(u => u.type === "Автомеханик");
 
             let select = document.getElementById('master');
-            let html = '<option value="">Выберите мастера</option>';
+            let options = '<option value="">Выберите мастера</option>';
 
             for (let i = 0; i < masters.length; i++) {
-                options = options +
-                    '<option value"' + masters[i].id + '">' +
-                    masters[i].fio +
-                    '</option>';
+                options += '<option value="' + masters[i].id + '">' + masters[i].fio + '</option>';
             }
 
             select.innerHTML = options;
@@ -75,18 +73,17 @@
             let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
             let requestData = {
-                startDate: new Date(),  
+                startDate: new Date().toISOString(),
                 carType: document.getElementById('autoType').value,
                 carModel: document.getElementById('model').value,
-                problemDescryption: document.getElementById('problem').value,
+                problemDescription: document.getElementById('problem').value,
                 requestStatus: document.getElementById('status').value,
                 completionDate: document.getElementById('completionDate').value || null,
                 repairParts: document.getElementById('parts').value,
                 masterId: document.getElementById('master').value || null,
-                clientId: currentUser ? currentUser.id : null  
+                clientId: currentUser ? currentUser.id : null
             };
 
-            
             let response = await fetch('/api/requests', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -100,8 +97,8 @@
                 showMessage('Ошибка при создании заявки', 'error');
             }
         }
-        loadMasters();
 
+        loadMasters();
     </script>
 </body>
 </html>

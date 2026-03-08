@@ -53,6 +53,9 @@
 - предупреждения, подсказки
 
 2 блок схемы
-1.1 основной алгоритм работы модуля: images/mainAlgorythm.png
-1.2 детализированный алгоритм функции подсчета среднего времени ремонта: images/avgTimeDetailedAlgorithm.png
+1.1 основной алгоритм работы модуля: schemes/block-schemes/mainAlgorythm.png
+1.2 детализированный алгоритм функции подсчета среднего времени ремонта: schemes/block-schemes/avgTimeDetailedAlgorithm.png
+
+3 erd: schemes/erd_autotrans_db.png
+
 

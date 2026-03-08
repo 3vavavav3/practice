@@ -6,23 +6,24 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
     <h1>Автосервис "Автотранс"</h1>
+
+    <div id="userInfo" style="margin-bottom: 10px; padding: 10px; background: #f0f0f0;"></div>
+
     <label>Поиск заявки</label>
     <br>
     <input type="text" id="searchInput" placeholder="Введите параметры для поиска">
     <button onclick="searchResults()">Найти</button>
-    <button onclick="location.href='authPage.html'">Выйти из системы</button>
+    <button onclick="logout()">Выйти из системы</button>
     <br>
+
     <h2>Меню</h2>
     <p>
-        <a href="createRequest.html">Добавление заявки</a>
-        <br>
-        <a href="statisticPage.html">Просмотр статистики</a>
-        <br>
+        <div id="menuItems"></div>
     </p>
-    <h2>Заявки на ремонт автомобилей</h2>
-    <table>
+
+    <h2>Заявки на ремонт</h2>
+    <table border="1" style="width:100%; border-collapse: collapse;">
         <thead>
             <tr>
                 <th>Дата создания</th>
@@ -37,111 +38,144 @@
                 <th></th>
             </tr>
         </thead>
-        <tbody id="requestsTable">
-        </tbody>
+        <tbody id="requestsTable"></tbody>
     </table>
 
     <script src="js/messages.js"></script>
     <script>
-        async function loadRequests() {
-            let response = await fetch('/api/requests')
-            let requests = await response.json();
+        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
-            let tbody = document.getElementById('requestsTable');
-            let html = '';
-
-            for (let i = 0; i < requests.length; i++) {
-                let r = requests[i];
-
-                let masterName = r.master ? r.master.fio : '';
-                let clientName = r.client ? r.client.fio : '';
-
-                html = html + '<tr>' +
-                    '<td>' + r.createDate + '</td>' +
-                    '<td>' + r.carType + '</td>' +
-                    '<td>' + r.carModel + '</td>' +
-                    '<td>' + r.problemDescryption + '</td>' +
-                    '<td>' + r.requestStatus + '</td>' +
-                    '<td>' + (r.completionDate || '') + '</td>' +
-                    '<td>' + (r.repairParts || '') + '</td>' +
-                    '<td>' + (r.master ? r.master.fio : '') + '</td>' +  
-                    '<td>' + (r.client ? r.client.fio : '') + '</td>' +  
-                    '<td>' +
-                    '<button onclick="editRequest(' + r.id + ')">Редактировать</button>' +
-                    '<button onclick="deleteRequest(' + r.id + ')">Удалить</button>' +
-                    '</td>' +
-                    '</tr>';
-
-            }
-
-            tbody.innerHTML = html;
+        if (!currentUser) {
+            window.location.href = 'authPage.html';
         }
 
-        
+        document.getElementById('userInfo').innerHTML =
+            'Пользователь: ' + currentUser.fio + ' | Роль: ' + currentUser.type;
+
+        let menuHtml = '';
+        if (currentUser.type !== 'Автомеханик') {
+            menuHtml += '<a href="createRequest.html">Добавление заявки</a><br>';
+        }
+        if (currentUser.type === 'Оператор' || currentUser.type === 'Менеджер') {
+            menuHtml += '<a href="statisticPage.html">Просмотр статистики</a><br>';
+        }
+        document.getElementById('menuItems').innerHTML = menuHtml;
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'authPage.html';
+        }
+
+        async function loadRequests() {
+            let response = await fetch(`/api/requests?userType=${currentUser.type}&userId=${currentUser.id}`);
+            let requests = await response.json();
+            let users = await (await fetch('/api/users')).json();
+
+            let html = '';
+            for (let r of requests) {
+                let client = users.find(u => u.id === r.clientId);
+                let master = users.find(u => u.id === r.masterId);
+                let startDate = r.startDate ? new Date(r.startDate).toLocaleDateString() : '';
+                let completionDate = r.completionDate ? new Date(r.completionDate).toLocaleDateString() : '';
+
+                let buttons = '';
+                if (currentUser.type === 'Оператор' || currentUser.type === 'Менеджер' ||
+                    (currentUser.type === 'Автомеханик' && r.masterId === currentUser.id)) {
+                    buttons += `<button onclick="editRequest(${r.id})">Редактировать</button>`;
+                }
+                if (currentUser.type === 'Оператор' || currentUser.type === 'Менеджер') {
+                    buttons += `<button onclick="deleteRequest(${r.id})">Удалить</button>`;
+                }
+
+                html += `<tr>
+                        <td>${startDate}</td>
+                        <td>${r.carType || ''}</td>
+                        <td>${r.carModel || ''}</td>
+                        <td>${r.problemDescription || ''}</td>
+                        <td>${r.requestStatus || ''}</td>
+                        <td>${completionDate}</td>
+                        <td>${r.repairParts || ''}</td>
+                        <td>${master ? master.fio : 'Не назначен'}</td>
+                        <td>${client ? client.fio : ''}</td>
+                        <td>${buttons}</td>
+                    </tr>`;
+            }
+            document.getElementById('requestsTable').innerHTML = html;
+        }
 
         async function deleteRequest(id) {
-            if (!confirmAction("Вы уверены, что хотите удалить заявку?")) {
-                return;
-            }
+            if (!confirm('Вы уверены, что хотите удалить заявку?')) return;
 
-            try {
-                let response = await fetch('/api/requests/' + id, {
-                    method: 'DELETE'
-                });
+            let response = await fetch(`/api/requests/${id}?userType=${currentUser.type}`, {
+                method: 'DELETE'
+            });
 
-                if (response.ok) {
-                    showMessage("Заявка удалена", "success");
-                    loadRequests(); 
-                } else {
-                    showMessage("Ошибка при удалении", "error");
-                }
-            } catch (error) {
-                showMessage("Ошибка соединения с сервером", "error");
+            if (response.ok) {
+                showMessage('Заявка удалена', 'success');
+                loadRequests();
+            } else {
+                showMessage('Нет прав для удаления', 'error');
             }
         }
 
         function editRequest(id) {
-            window.location.href = 'editRequest.html?id' + id;
+            window.location.href = 'editRequest.html?id=' + id;
         }
 
         async function searchResults() {
-            let searchText = document.getElementById('searchInput').value;
-
-            if (!searchText) {
-                showMessage("Введите текст для поиска", "warning");
+            let text = document.getElementById('searchInput').value;
+            if (!text) {
+                showMessage('Введите текст для поиска', 'warning');
                 return;
             }
 
-            let response = await fetch('/api/requests/search?text=' + encodeURIComponent(searchText));
+            let response = await fetch('/api/requests/search?text=' + encodeURIComponent(text));
             let results = await response.json();
 
-            let tbody = document.getElementById('requestsTable');
-
-            if (results.length == 0) {
-                tbody.innerHTML = '<tr<td colspan="5">Ничего не найдено</td></tr>';
-                return;
-
+            if (currentUser.type === 'Заказчик') {
+                results = results.filter(r => r.clientId === currentUser.id);
+            } else if (currentUser.type === 'Автомеханик') {
+                results = results.filter(r => r.masterId === currentUser.id || r.requestStatus === 'Новая заявка');
             }
+
+            let users = await (await fetch('/api/users')).json();
 
             let html = '';
-            for (let i = 0; i < results.length; i++) {
-                let r = results[i];
-                html = html + '<tr>' +
-                    '<td>' + r.requestNumber + '</td>' +
-                    '<td>' + r.model + '</td>' +
-                    '<td>' + r.status + '</td>' +
-                    '<td>' +
-                    '<button onclick="viewRequest(' + r.id + ')">Перейти к заявке</button>' +
-                    '</td>' +
-                    '</tr>';
+            for (let r of results) {
+                let client = users.find(u => u.id === r.clientId);
+                let master = users.find(u => u.id === r.masterId);
+                let startDate = r.startDate ? new Date(r.startDate).toLocaleDateString() : '';
+
+                let buttons = '';
+                if (currentUser.type === 'Оператор' || currentUser.type === 'Менеджер' ||
+                    (currentUser.type === 'Автомеханик' && r.masterId === currentUser.id)) {
+                    buttons += `<button onclick="editRequest(${r.id})">Редактировать</button>`;
+                }
+                if (currentUser.type === 'Оператор' || currentUser.type === 'Менеджер') {
+                    buttons += `<button onclick="deleteRequest(${r.id})">Удалить</button>`;
+                }
+
+                html += `<tr>
+                        <td>${startDate}</td>
+                        <td>${r.carType || ''}</td>
+                        <td>${r.carModel || ''}</td>
+                        <td>${r.problemDescription || ''}</td>
+                        <td>${r.requestStatus || ''}</td>
+                        <td></td>
+                        <td>${r.repairParts || ''}</td>
+                        <td>${master ? master.fio : 'Не назначен'}</td>
+                        <td>${client ? client.fio : ''}</td>
+                        <td>${buttons}</td>
+                    </tr>`;
             }
 
-            tbody.innerHTML = html;
+            if (results.length === 0) {
+                html = '<tr><td colspan="10">Ничего не найдено</td></tr>';
+            }
+            document.getElementById('requestsTable').innerHTML = html;
         }
 
         loadRequests();
-
     </script>
-
 </body>
 </html>

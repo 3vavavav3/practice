@@ -1,24 +1,39 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.ComponentModel.DataAnnotations;
+﻿using CarRepairRequests.Models;
+using System.Text.Json.Serialization;
 
-namespace CarRepairRequests.Models
+public class Request
 {
-    public class Request
-    {
-        public int Id { get; set; }
-        public DateTime StartDate { get; set; }
-        public string CarType { get; set; }
-        public string CarModel { get; set; }
-        public string ProblemDescryption { get; set; }
-        public string RequestStatus { get; set; }
-        public DateTime? CompletionDate { get; set; }
-        public string RepairParts { get; set; }
-        public int? MasterId { get; set; }
-        public int? ClientId { get; set; }
+    public int Id { get; set; }
 
-        public User Master { get; set; }    
-        public User Client { get; set; }      
+    [JsonPropertyName("startDate")]
+    public DateTime StartDate { get; set; }
 
-        public ICollection<Comment> Comments { get; set; }
-    }
+    [JsonPropertyName("carType")]
+    public string CarType { get; set; }
+
+    [JsonPropertyName("carModel")]
+    public string CarModel { get; set; }
+
+    [JsonPropertyName("problemDescription")]
+    public string ProblemDescription { get; set; }
+
+    [JsonPropertyName("requestStatus")]
+    public string RequestStatus { get; set; }
+
+    [JsonPropertyName("completionDate")]
+    public DateTime? CompletionDate { get; set; }
+
+    [JsonPropertyName("repairParts")]
+    public string RepairParts { get; set; }
+
+    [JsonPropertyName("masterId")]
+    public int? MasterId { get; set; }
+
+    [JsonPropertyName("clientId")]
+    public int? ClientId { get; set; }
+
+    // Навигационные свойства
+    public User Master { get; set; }
+    public User Client { get; set; }
+    public ICollection<Comment> Comments { get; set; }
 }

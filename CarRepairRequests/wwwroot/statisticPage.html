@@ -5,40 +5,48 @@
     <title>Статистика</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
     <h1>Статистика работы отдела обслуживания</h1>
 
-    <div id="stats">
-        <p>... Загрузка ...</p>
-    </div>
+    <div id="userInfo" style="margin-bottom: 10px; padding: 10px; background: #f0f0f0;"></div>
+    <div id="stats">... Загрузка ...</div>
     <br>
     <a href="mainPage.html">Вернуться на главную страницу</a>
-    <script src="js/messages.js"></script>
+
     <script>
-        async function loadStatidtics() {
-            let response = await fetch('/api/statistics');
-            let data = await response.json();
+        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
-            let html =
-                '<p><strong>Количество выполненных заявок:</strong> ' + data.completedCount + '</p>' +
-                '<p><strong>Среднее время выполнения заявки:</strong> ' + data.avgTime + ' часов</p>' +
-                '<p><strong>Статистика по типам неисправностей:</strong></p>' +
-                '<ul>';
+        if (!currentUser) {
+            window.location.href = 'authPage.html';
+        }
 
-            for (let type in data.byProblem) {
-                html += '<li>' + type + ': ' + data.byProblem[type] + '</li>';
+        document.getElementById('userInfo').innerHTML =
+            'Пользователь: ' + currentUser.fio + ' | Роль: ' + currentUser.type;
+
+        if (currentUser.type !== 'Оператор' && currentUser.type !== 'Менеджер') {
+            document.getElementById('stats').innerHTML = 'У вас нет прав для просмотра статистики';
+        } else {
+            loadStatistics();
+        }
+
+        async function loadStatistics() {
+            try {
+                let response = await fetch('/api/statistics?userType=' + currentUser.type);
+                let data = await response.json();
+
+                let html = '<p><strong>Количество выполненных заявок:</strong> ' + data.completedCount + '</p>';
+                html += '<p><strong>Статистика по типам неисправностей:</strong></p><ul>';
+
+                for (let problem in data.byProblem) {
+                    html += `<li>${problem || 'Не указана'}: ${data.byProblem[problem]}</li>`;
+                }
+                html += '</ul>';
+
+                document.getElementById('stats').innerHTML = html;
+            } catch (error) {
+                document.getElementById('stats').innerHTML = '<p style="color: red;">Ошибка загрузки статистики</p>';
             }
-
-            html += '</ul>';
-
-            document.getElementById('stats').innerHTML = html;
-        } 
-
-
-        loadStatidtics();
+        }
     </script>
-
 </body>
-
 </html>

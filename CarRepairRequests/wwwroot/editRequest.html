@@ -7,41 +7,100 @@
 </head>
 <body>
     <h1>Редактирование заявки</h1>
-    <h2>Заявка ///</h2>
+
+    <div id="userInfo" style="margin-bottom: 10px; padding: 10px; background: #f0f0f0;"></div>
+
     <label>Статус</label>
     <br>
-    <select name="status" id="status">
-        <option value="process">В процессе</option>
-        <option value="ready">Готова к выдаче</option>
-        <option value="new">Новая заявка</option>
+    <select id="status">
+        <option value="Новая заявка">Новая заявка</option>
+        <option value="В процессе">В процессе</option>
+        <option value="Завершена">Завершена</option>
     </select>
     <br>
+
     <label>Запчасти</label>
     <br>
-    <input type="text" id="createDate" placeholder="Укажите запчасти">
+    <input type="text" id="repairParts" placeholder="Укажите запчасти" style="width: 300px;">
     <br>
-    <label>Мастер</label>
+
+    <div id="masterField">
+        <label>Мастер</label>
+        <br>
+        <select id="master"></select>
+        <br>
+    </div>
+
+    <button onclick="updateRequest()" style="margin-top: 10px;">Сохранить</button>
     <br>
-    <select name="master" id="master">
-    </select>
+    <a href="mainPage.html">Вернуться на главную</a>
 
     <script src="js/messages.js"></script>
     <script>
+        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        let requestId = new URLSearchParams(window.location.search).get('id');
+
+        if (!currentUser) {
+            window.location.href = 'authPage.html';
+        }
+
+        document.getElementById('userInfo').innerHTML =
+            'Роль: ' + currentUser.type;
+
+        if (currentUser.type !== 'Оператор' && currentUser.type !== 'Менеджер') {
+            document.getElementById('masterField').style.display = 'none';
+        }
+
         async function loadMasters() {
-            let response = await fetch('/api/users?role=mechanic');
-            let masters = await response.json();
+            let response = await fetch('/api/users');
+            let users = await response.json();
+            let masters = users.filter(u => u.type === 'Автомеханик');
 
-            let select = document.getElementById('master');
-            let html = '<option value="">Выберите мастера</option>';
+            let options = '<option value="">Выберите мастера</option>';
+            for (let m of masters) {
+                options += `<option value="${m.id}">${m.fio}</option>`;
+            }
+            document.getElementById('master').innerHTML = options;
+        }
 
-            for (let i; i < masters.length; i++) {
-                options = options +
-                    '<option value"' + masters[i].id + '">' +
-                    masters[i].name +
-                    '</option>';
+        async function loadRequest() {
+            let response = await fetch('/api/requests/' + requestId);
+            let request = await response.json();
+
+            document.getElementById('status').value = request.requestStatus || '';
+            document.getElementById('repairParts').value = request.repairParts || '';
+
+            if (currentUser.type === 'Оператор' || currentUser.type === 'Менеджер') {
+                await loadMasters();
+                document.getElementById('master').value = request.masterId || '';
+            }
+        }
+
+        async function updateRequest() {
+            let data = {
+                requestStatus: document.getElementById('status').value,
+                repairParts: document.getElementById('repairParts').value
+            };
+
+            if (currentUser.type === 'Оператор' || currentUser.type === 'Менеджер') {
+                data.masterId = document.getElementById('master').value || null;
             }
 
-            select.innerHTML = options;
+            let response = await fetch(`/api/requests/${requestId}?userType=${currentUser.type}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                showMessage('Заявка обновлена', 'success');
+                window.location.href = 'mainPage.html';
+            } else {
+                showMessage('Ошибка при обновлении', 'error');
+            }
+        }
+
+        loadRequest();
     </script>
 </body>
 </html>

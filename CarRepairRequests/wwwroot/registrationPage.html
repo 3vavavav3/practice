@@ -30,15 +30,16 @@
     <br>
     <label>Роль в системе:</label>
     <select name="role" id="role">
-        <option value="manager">Менеджер</option>
-        <option value="automechanic">Автомеханик</option>
-        <option value="customer">Заказчик</option>
+        <option value="Заказчик">Заказчик</option>
+        <option value="Автомеханик">Автомеханик</option>
+        <option value="Оператор">Оператор</option>
+        <option value="Менеджер">Менеджер</option>
     </select>
     <br>
     <br>
     <button onclick="reg()">Зарегистрироваться</button>
     <br>
-    <a href="registrationPage.html">Вернуться на страницу авторизации</a>
+    <a href="authPage.html">Вернуться на страницу авторизации</a>
 
     <script src="js/messages.js"></script>
     <script>
@@ -62,6 +63,7 @@
 
             if (password.length < 5) {
                 showMessage("Пароль должен быть не меньше 5 символов", "warning");
+                return;
             }
 
             let userData = {
@@ -77,20 +79,19 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData)
             })
-
-                .then(response => {
+                .then(async response => {
                     if (response.ok) {
                         showMessage("Регистрация прошла успешно", "success");
-                        window.location.href = "authPage.html";
+                        setTimeout(() => window.location.href = "authPage.html", 1500);
                     } else {
-                        showMessage("Ошибка при регистрации", "error");
+                        let error = await response.text();
+                        showMessage(error || "Ошибка при регистрации", "error");
                     }
                 })
                 .catch(error => {
                     showMessage("Ошибка соединения с сервером", "error");
                 });
         }
-
     </script>
 </body>
 </html>

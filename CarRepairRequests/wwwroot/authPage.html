@@ -32,20 +32,20 @@
                 showMessage('Введите логин и пароль', 'warning');
                 return;
             }
+
             let response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    login: username,
+                    login: username,    
                     password: password
                 })
             });
 
-
             if (response.ok) {
                 let userData = await response.json();
                 localStorage.setItem('currentUser', JSON.stringify(userData));
-                showMessage("Добро пожаловать, " + userData.fio, "success");  // БЫЛО: userData.name
+                showMessage("Добро пожаловать, " + userData.fio, "success");
                 window.location.href = "mainPage.html";
             } else {
                 showMessage("Неверный логин или пароль", "error");
