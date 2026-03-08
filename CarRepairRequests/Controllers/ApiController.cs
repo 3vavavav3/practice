@@ -171,7 +171,26 @@ namespace CarRepairRequests.Controllers
                     .ToDictionary(g => g.Key, g => g.Count())
             });
         }
+
+        [HttpGet("manager/reports")]
+        public async Task<IActionResult> GetManagerReports(string userType)
+        {
+            if (userType != "Менеджер") return Unauthorized();
+
+            var requests = await _db.Requests.ToListAsync();
+
+            return Ok(new
+            {
+                totalRequests = requests.Count,
+                completedRequests = requests.Count(r => r.RequestStatus == "Завершена"),
+                inProgress = requests.Count(r => r.RequestStatus == "В процессе"),
+                masters = requests.Where(r => r.MasterId != null).GroupBy(r => r.MasterId).Count()
+            });
+        }
+
     }
+
+
 
     public class LoginModel
     {
